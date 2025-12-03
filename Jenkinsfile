@@ -1,28 +1,45 @@
 pipeline {
+    agent any
 
-	agent any
-	tools {
-		maven 'm360'
-	}
-
-	stages {
-	  stage('build') {
-		steps {
-		  sh 'mvn install -DskipTests'
-		}
-	  }
-
-	  stage('test') {
-		steps {
-		  sh 'mvn test'
-		  
-		  post {
-				archiveArtifacts artifacts: 'target/**.jar', followSymlinks: false
-				junit stdioRetention: '', testResults: 'target/surefire-reports/*.xml'
-			}
-		}
-	  }
-
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: 'https://github.com/mallikarjunkolur/sBoot.git'
+            }
+        }
+stage('clean') {
+steps {
+sh 'mvn clean'
+}
+}
+stage('compile') {
+steps {
+sh 'mvn compile'
+}
+}
+stage('test') {
+steps {
+sh 'mvn test'
+}
+}
+stage('build') {
+steps {
+sh 'mvn clean install'
+}
+}
+stage('package') {
+steps {
+sh 'mvn package'
+}
+}
+}
+post {
+success {
+archiveArtifacts artifacts: 'target/*.jar, target/*.war', fingerprint: true
+}
+failure {
+echo "build failed"
+}
+}
 }
 
-}
